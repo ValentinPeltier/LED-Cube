@@ -1,7 +1,5 @@
 #include "Cube.h"
 
-Cube::Cube() : lastFrameStartTime(0), frameBuffer(std::vector<Frame>()) {}
-
 void Cube::init() {
   Serial.begin(9600);
   Serial.println("Initializing...");
@@ -15,7 +13,7 @@ void Cube::init() {
     pinMode(COLUMN_PINS[i], OUTPUT);
   }
 
-  turnOff();
+  button.init(BUTTON_PIN);
 
   Frame frame;
 

@@ -1,7 +1,7 @@
 #ifndef CONSTS_H
 #define CONSTS_H
 
-const int FRAME_DURATION = 3;
+const int FRAME_DURATION = 1;
 
 /* ------------ */
 /* --- Pins --- */

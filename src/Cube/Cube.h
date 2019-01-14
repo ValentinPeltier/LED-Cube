@@ -5,11 +5,11 @@
 #include <vector>
 
 #include "consts.h"
+#include "Button.h"
 #include "Frame.h"
 
 class Cube {
 public:
-  Cube();
   void init();
   void loop();
 
@@ -18,6 +18,7 @@ private:
   void displayFrame(Frame);
 
 private:
+  Button button;
   long lastFrameStartTime;
   std::vector<Frame> frameBuffer;
 };
