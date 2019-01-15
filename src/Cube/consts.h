@@ -33,12 +33,12 @@ const int ANIMATION_COUNT = sizeof(ANIMATION_NAMES) / sizeof(ANIMATION_NAMES[0])
 /* ------------------ */
 
 // Blink
-const int BLINK_FRAME_DURATION = 120;
-const float BLINK_RATE = 1 / 5.0f;
+const int BLINK_FRAME_DURATION = 100;
+const float BLINK_RATE = 1 / 4.0f;
 
 // Rain
 const int RAIN_FRAME_DURATION = 140;
-const float RAIN_RATE = 1 / 6.0f;
-const int RAIN_MAX_DROPS = 2;
+const float RAIN_RATE = 1 / 3.0f;
+const int RAIN_MAX_DROPS = 1;
 
 #endif

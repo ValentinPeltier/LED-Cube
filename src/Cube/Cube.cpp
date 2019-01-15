@@ -63,9 +63,14 @@ void Cube::calculateAnimation(bool animationHasChanged) {
         for(int j = 0; j < 25; j++) {
           if(frame.state[i][j]) {
             frame.state[i][j] = false;
+
             if(i - 1 >= 0) {
               // Go down
               frame.state[i - 1][j] = true;
+
+              for(int k = i; k < 5; k++) {
+                frame.state[k][j] = false;
+              }
             }
             else {
               frame.state[4][j] = true;
@@ -93,10 +98,10 @@ void Cube::calculateAnimation(bool animationHasChanged) {
           continue;
         }
 
-        if(j + 1 < 25) {
+        if(j + 1 < 25 && j / 5 == (j + 1) / 5) {
           drops[j + 1] = false;
         }
-        if(j - 1 >= 0) {
+        if(j - 1 >= 0 && j / 5 == (j - 1) / 5) {
           drops[j - 1] = false;
         }
         if(j + 5 < 25) {
