@@ -5,66 +5,154 @@ void Cube::init() {
   Serial.println("Initializing...");
 
   // Set pins mode
-  for(int i = 0; i < ROW_COUNT; i++) {
+  for(int i = 0; i < 5; i++) {
     pinMode(ROW_PINS[i], OUTPUT);
   }
 
-  for(int i = 0; i < COLUMN_COUNT; i++) {
+  for(int i = 0; i < 25; i++) {
     pinMode(COLUMN_PINS[i], OUTPUT);
   }
 
   button.init(BUTTON_PIN);
 
-  Frame frame;
-
-  // First frame : 1 LED over 2 is on
-  for(int i = 0; i < ROW_COUNT; i++) {
-    for(int j = 0; j < COLUMN_COUNT; j++) {
-      frame.state[i][j] = (i + j) % 2 == 0;
-    }
-  }
-  frame.duration = 1000;
-  frameBuffer.push_back(frame);
-
-  // Second frame : inverse of first frame
-  for(int i = 0; i < ROW_COUNT; i++) {
-    for(int j = 0; j < COLUMN_COUNT; j++) {
-      frame.state[i][j] = (i + j) % 2 == 1;
-    }
-  }
-  frame.duration = 1000;
-  frameBuffer.push_back(frame);
+  calculateAnimation(true);
 }
 
 void Cube::loop() {
-  if(frameBuffer.size() > 0) {
-    // If current frame has been displayed long enough
-    if(millis() >= lastFrameStartTime + frameBuffer[0].duration) {
-      // Remove it from the buffer
-      lastFrameStartTime = millis();
-      frameBuffer.erase(frameBuffer.begin());
+  if(button.click()) {
+    nextAnimation();
+  }
+
+  displayAnimation();
+}
+
+void Cube::nextAnimation() {
+  animationIndex = (animationIndex + 1) % ANIMATION_COUNT;
+
+  calculateAnimation(true);
+}
+
+void Cube::calculateAnimation(bool animationHasChanged) {
+  String animationName = ANIMATION_NAMES[animationIndex];
+  Frame frame;
+
+  if(animationName == "blink") {
+    for(int i = 0; i < 5; i++) {
+      for(int j = 0; j < 25; j++) {
+        frame.state[i][j] = random(1/BLINK_RATE) == 0;
+      }
+    }
+    frame.duration = BLINK_FRAME_DURATION;
+
+    animation.frames.push_back(frame);
+    animation.loop = true;
+  }
+  else if(animationName == "rain") {
+    if(animationHasChanged) {
+      // Turn on the top LEDs
+      for(int i = 0; i < 25; i++) {
+        frame.state[4][i] = true;
+      }
+    }
+    else {
+      // Copy previous frame
+      frame = animation.frames[0];
+
+      // Move down all drops
+      for(int i = 0; i < 4; i++) {
+        for(int j = 0; j < 25; j++) {
+          if(frame.state[i][j]) {
+            frame.state[i][j] = false;
+            if(i - 1 >= 0) {
+              // Go down
+              frame.state[i - 1][j] = true;
+            }
+            else {
+              frame.state[4][j] = true;
+            }
+          }
+        }
+      }
+
+      // Select new drops
+      bool drops[25];
+      int order[25];
+      
+      for(int i = 0; i < 25; i++) {
+        drops[i] = random(1/RAIN_RATE) == 0;
+        order[i] = i;
+      }
+
+      shuffle(order);
+
+      // Turn on maximum RAIN_MAX_DROPS drops
+      for(int i = 0; i < RAIN_MAX_DROPS; i++) {
+        int j = order[i];
+
+        if(!drops[j]) {
+          continue;
+        }
+
+        if(j + 1 < 25) {
+          drops[j + 1] = false;
+        }
+        if(j - 1 >= 0) {
+          drops[j - 1] = false;
+        }
+        if(j + 5 < 25) {
+          drops[j + 5] = false;
+        }
+        if(j - 5 >= 0) {
+          drops[j - 5] = false;
+        }
+      }
+
+      // Turn off all other LEDs
+      for(int i = RAIN_MAX_DROPS; i < 25; i++) {
+        drops[order[i]] = false;
+      }
+
+      // Set frame state
+      for(int i = 0; i < 25; i++) {
+        frame.state[3][i] = drops[i];
+      }
     }
 
-    displayFrame(frameBuffer[0]);
+    frame.duration = RAIN_FRAME_DURATION;
+    animation.frames.push_back(frame);
+    animation.loop = true;
+  }
+}
+
+void Cube::displayAnimation() {
+  if(animation.frames.size() > 0) {
+    // If current frame has been displayed long enough
+    if(millis() >= lastFrameStartTime + animation.frames[0].duration) {
+      if(animation.frames.size() == 1) {
+        if(animation.loop) {
+          calculateAnimation(false);
+        }
+        else {
+          nextAnimation();
+        }
+      }
+
+      // Remove it from the buffer
+      animation.frames.erase(animation.frames.begin());
+      lastFrameStartTime = millis();
+    }
+
+    displayFrame(animation.frames[0]);
   }
   else {
+    lastFrameStartTime = millis();
     turnOff();
   }
 }
 
-void Cube::turnOff() {
-  for(int i = 0; i < ROW_COUNT; i++) {
-    digitalWrite(ROW_PINS[i], LOW);
-  }
-
-  for(int j = 0; j < COLUMN_COUNT; j++) {
-    digitalWrite(COLUMN_PINS[j], LOW);
-  }
-}
-
 void Cube::displayFrame(Frame frame) {
-  for(int i = 0; i < ROW_COUNT; i++) {
-    for(int j = 0; j < COLUMN_COUNT; j++) {
+  for(int i = 0; i < 5; i++) {
+    for(int j = 0; j < 25; j++) {
       // Set columns
       digitalWrite(COLUMN_PINS[j], frame.state[i][j]);
     }
@@ -75,5 +163,15 @@ void Cube::displayFrame(Frame frame) {
     delay(FRAME_DURATION);
 
     digitalWrite(ROW_PINS[i], LOW);
+  }
+}
+
+void Cube::turnOff() {
+  for(int i = 0; i < 5; i++) {
+    digitalWrite(ROW_PINS[i], LOW);
+  }
+
+  for(int j = 0; j < 25; j++) {
+    digitalWrite(COLUMN_PINS[j], LOW);
   }
 }

@@ -4,7 +4,9 @@
 #include <Arduino.h>
 #include <vector>
 
+#include "utils.h"
 #include "consts.h"
+#include "Animation.h"
 #include "Button.h"
 #include "Frame.h"
 
@@ -14,13 +16,17 @@ public:
   void loop();
 
 private:
+  void displayAnimation();
+  void nextAnimation();
+  void calculateAnimation(bool animationHasChanged);
   void turnOff();
   void displayFrame(Frame);
 
 private:
   Button button;
   long lastFrameStartTime;
-  std::vector<Frame> frameBuffer;
+  Animation animation;
+  int animationIndex;
 };
 
 #endif
